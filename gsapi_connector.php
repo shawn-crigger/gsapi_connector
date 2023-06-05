@@ -20,6 +20,8 @@
  * Domain Path:       /languages
  */
 
+use GSAPI\Template\Loader;
+
 if (!defined('ABSPATH')) {
 	exit;
 }
@@ -28,6 +30,7 @@ define('GSAPI_PATH', __DIR__);
 define('GSAPI_URL', untrailingslashit(plugin_dir_url(__FILE__)));
 define('GSAPI_TEXTDOMAIN', 'gsapi');
 
+require_once GSAPI_PATH . '/vendor/autoload.php';
 
 //error_reporting(E_ALL);
 //ini_set('display_errors', 1);
@@ -67,14 +70,18 @@ class GSAPI_Connector
 	 * @var        array
 	 */
 	static protected $settings = NULL;
+	/**
+	 * Holds the plugin settings
+	 * @var        array|null
+	 */
+	public $api_response = NULL;
 
 	// ------------------------------------------------------------------------
 
 	public function __construct()
 	{
-		require_once GSAPI_PATH . '/vendor/autoload.php';
-
 		self::get_settings();
+		require_once GSAPI_PATH . '/helpers/helpers.php';
 
 		$this->_api_key  = self::$settings['gsapi_apikey'] ?? NULL;
 		$this->_password  = self::$settings['gsapi_password'] ?? NULL;
@@ -93,9 +100,9 @@ class GSAPI_Connector
 		add_action('template_redirect', array(&$this, 'load_assets'));
 
 		add_shortcode('gsapi_category', array(&$this, 'fetch_categories'));
-		// add_action('template_include',  array(&$this, 'change_template'));
+		add_action('template_include',  array(&$this, 'change_template'));
 		// add_filter('do_parse_request',  array(&$this, 'wporg_add_custom_query'), 10, 3);
-		add_filter('template_include',  array(&$this, 'gsapi_template_include'));
+		// add_filter('template_include',  array(&$this, 'gsapi_template_include'));
 		// add_filter('post_type_link', array(&$this, 'modify_places_links'), 10, 2);
 		// add_action('template_include',  array(&$this, 'gsplaces_page_template'), 99);
 	}
@@ -119,34 +126,11 @@ class GSAPI_Connector
 
 		add_rewrite_rule('^gsplace/([^/]*)-([^/]*)/$', 'index.php?gsplace=$matches[1]&id=$matches[2]', 'top');
 		// Convert ?cat=853 to '/cat-title-id'
+		add_rewrite_rule('^locations/([^/]*)-([^/]*)/$', 'index.php?gslocations=$matches[1]&id=$matches[2]', 'top');
 		add_rewrite_rule('^([^/]*)/([^/]*)-([0-9]{3,5})/$', 'index.php?category_name=$matches[1]&cat=$matches[2]&id=$matches[3]', 'top');
 
 		add_filter('document_title_parts', array(&$this, 'set_page_title'), 10, 1);
 	}
-
-	// ------------------------------------------------------------------------
-
-function gsapi_template_include($template) {
-  if (is_singular('gsplace')) {
-    $custom_template = plugin_dir_path(__FILE__) . 'templates/single-gsplace.php';
-    if (file_exists($custom_template)) {
-      return $custom_template;
-    }
-  }
-  return $template;
-}
-
-
-/*
-	public function gsplace_include()
-	{
-		include(plugin_dir_path(__FILE__) . 'templates/single-gsplace.php');
-	}
-	function gsplace_display()
-	{
-		get_template_part('templates/custom-template');
-	}
-*/
 
 	// ------------------------------------------------------------------------
 
@@ -242,14 +226,25 @@ function gsapi_template_include($template) {
 		global $wp_query;
 
 		if (get_query_var('gsplace', false) !== false) {
-			if (file_exists(get_template_directory(__FILE__) . '/gsapi/views/place.php')) {
-				$newTemplate = get_template_directory(__FILE__) . '/gsapi/views/place.php';
+			if (file_exists(get_template_directory(__FILE__) . '/gsapi/templates/gsplace.php')) {
+				$newTemplate = get_template_directory(__FILE__) . '/gsapi/templates/gsplace.php';
 				//Check plugin directory next
 			} else {
-				$newTemplate = plugin_dir_path(__FILE__) . '/views/place.php';
+				$newTemplate = plugin_dir_path(__FILE__) . '/templates/gsplace.php';
 			}
 			$template = $newTemplate;
 		}
+
+		if (get_query_var('gslocations', false) !== false) {
+			if (file_exists(get_template_directory(__FILE__) . '/gsapi/templates/listings.php')) {
+				$newTemplate = get_template_directory(__FILE__) . '/gsapi/templates/listings.php';
+				//Check plugin directory next
+			} else {
+				$newTemplate = plugin_dir_path(__FILE__) . '/templates/listings.php';
+			}
+			$template = $newTemplate;
+		}
+
 		$wp_query->is_404 = false;
 		header("HTTP/2.0 200 OK");
 
@@ -635,7 +630,7 @@ function gsapi_template_include($template) {
 			'menu_icon'             => 'dashicons-location-alt',
 		);
 		register_post_type('gsplace', $args);
-
+		$this->create_taxonomies();
 		flush_rewrite_rules();
 	}
 
@@ -689,10 +684,10 @@ function gsapi_template_include($template) {
 			'labels'                     => $labels,
 			'hierarchical'               => false,
 			'public'                     => true,
-			'show_ui'                    => true,
-			'show_admin_column'          => true,
-			'show_in_nav_menus'          => true,
-			'show_tagcloud'              => true,
+			'show_ui'                    => false,
+			'show_admin_column'          => false,
+			'show_in_nav_menus'          => false,
+			'show_tagcloud'              => false,
 			'rewrite'                    => array('slug' => 'gslocations'),
 		);
 		register_taxonomy('gslocations', array('gsplace'), $args);

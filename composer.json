@@ -1,0 +1,23 @@
+{
+  "name": "shawn-crigger/gsapi",
+  "description": "WP Plugin to connect to the GSAPI.",
+  "authors": [
+    {
+      "name": "Shawn Crigger",
+      "email": "ithippyshawn@gmail.com"
+    }
+  ],
+  "require": {
+    "twig/twig": "^3.4.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "GSAPI\\": "includes/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "GSAPI\\Tests\\": "tests/"
+    }
+  }
+}
