@@ -119,16 +119,16 @@ class GSAPI_Connector
 
 		add_rewrite_rule('^gscat/([^/]*)/$', 'index.php?cat=$matches[1]', 'top');
 		add_rewrite_rule('^gscat/([^/]*)/page/([^/]*)/$', 'index.php?cat=$matches[1]&pagenum=$matches[2]', 'top');
-		add_rewrite_rule('^cat/([^/]*)/?', 'index.php?cat=$matches[1]', 'top');
+		// add_rewrite_rule('^cat/([^/]*)/?', 'index.php?cat=$matches[1]', 'top');
 		// add_rewrite_rule('^([^/]*)/ethiopian-restaurants-([0-9]{3,5})/$', 'index.php?pagename=$matches[1]&cat=$matches[2]', 'top');
 		add_rewrite_rule('^pagenum/([^/]*)/?', 'index.php?pagenum=$matches[1]', 'top');
 		add_rewrite_rule('^listing/([^/]*)/?', 'index.php?listing=$matches[1]', 'top');
 
 		add_rewrite_rule('^gsplace/([^/]*)-([^/]*)/$', 'index.php?gsplace=$matches[1]&id=$matches[2]', 'top');
 		// Convert ?cat=853 to '/cat-title-id'
-		add_rewrite_rule('^locations/([^/]*)-([^/]*)/$', 'index.php?gslocations=$matches[1]&id=$matches[2]', 'top');
-		add_rewrite_rule('^([^/]*)/([^/]*)-([0-9]{3,5})/$', 'index.php?category_name=$matches[1]&cat=$matches[2]&id=$matches[3]', 'top');
-
+		add_rewrite_rule('^locations/([^/]*)-([^/]*)-([0-9]{3,5})/$', 'index.php?gslocations=$matches[1]&id=$matches[2]', 'top');
+		// add_rewrite_rule('^([^/]*)/([^/]*)-([0-9]{3,5})/$', 'index.php?category_name=$matches[1]&cat=$matches[2]&id=$matches[3]', 'top');
+		add_rewrite_rule('^gscat/([^/]*)-([^/]*)/$', 'index.php?gscat=$matches[1]&id=$matches[2]', 'top');
 		add_filter('document_title_parts', array(&$this, 'set_page_title'), 10, 1);
 	}
 
@@ -155,6 +155,7 @@ class GSAPI_Connector
 		$query_vars[] = 'sort';
 		$query_vars[] = 'listing';
 		$query_vars[] = 'pagenum';
+		$query_vars[] = 'perpage';
 		$query_vars[] = 'gscat';
 		$query_vars[] = 'cat';
 		$query_vars[] = 'gsplace';
@@ -188,7 +189,7 @@ class GSAPI_Connector
 
 			$site_title = get_bloginfo('name');
 			if ($wp_query->query['post_type'] == 'gsplace') {
-				$post_title = $this->get_title_name('gsplace');
+				$post_title = $this->api_response[0]->name;
 				$post_title = $site_title . '| About ' . $post_title;
 				$return = $post_title;
 			} elseif ($wp_query->query['post_type'] == 'gscat') {
@@ -226,6 +227,7 @@ class GSAPI_Connector
 		global $wp_query;
 
 		if (get_query_var('gsplace', false) !== false) {
+			$this->api_response = $this->_fetch_detail();
 			if (file_exists(get_template_directory(__FILE__) . '/gsapi/templates/gsplace.php')) {
 				$newTemplate = get_template_directory(__FILE__) . '/gsapi/templates/gsplace.php';
 				//Check plugin directory next
@@ -235,7 +237,13 @@ class GSAPI_Connector
 			$template = $newTemplate;
 		}
 
-		if (get_query_var('gslocations', false) !== false) {
+		if (get_query_var('gscat', false) !== false) {
+			$id  = id_from_slug(get_query_var('gscat'));
+			$atts= array(
+				'category' => $id,
+			);
+			return $this->fetch_categories($atts, null);
+			/*
 			if (file_exists(get_template_directory(__FILE__) . '/gsapi/templates/listings.php')) {
 				$newTemplate = get_template_directory(__FILE__) . '/gsapi/templates/listings.php';
 				//Check plugin directory next
@@ -243,6 +251,7 @@ class GSAPI_Connector
 				$newTemplate = plugin_dir_path(__FILE__) . '/templates/listings.php';
 			}
 			$template = $newTemplate;
+			*/
 		}
 
 		$wp_query->is_404 = false;
@@ -353,15 +362,14 @@ class GSAPI_Connector
 		if (isset($data->category_info)) {
 			foreach ($data->category_info as $row) {
 				$parentId = $row->pid;
-				$parentName = '';
 				if (is_numeric($parentId) && $parentId > 0) {
 					if ($parentId == $current) {
-						$parentSlug = $row->name . '-' . $parentId;
+						$parentSlug = make_slug_id($row->name, $parentId);
 					}
 				}
 				$hasParent = ($row->id == $row->pid) ? true : $hasParent;
 				$sel = ($current == $row->id) ? ' selected="selected" ' : NULL;
-				$slug = urlencode($row->name . '-' . $row->id);
+				$slug = make_slug_id($row->name,$row->id);
 				$cats .= "<option {$sel} value=\"{$slug}\" >{$row->plural}</option>\n";
 			}
 		}
@@ -373,7 +381,7 @@ class GSAPI_Connector
 		if (isset($data->subcategories)) {
 			foreach ($data->subcategories as $row) {
 				$sel = ($current == $row->id) ? ' selected="selected" ' : NULL;
-				$slug = urlencode($row->name . '-' . $row->id);
+				$slug = make_slug_id($row->name, $row->id);
 				$cats .= "<option {$sel} value=\"{$slug}\" >{$row->plural}</option>\n";
 			}
 		}
@@ -580,39 +588,39 @@ class GSAPI_Connector
 	public function create_cpt()
 	{
 		$labels = array(
-			'name'                  => _x('Business Listings', 'Post Type General Name', 'text_domain'),
-			'singular_name'         => _x('Business Listing', 'Post Type Singular Name', 'text_domain'),
-			'menu_name'             => __('GSAPI', 'text_domain'),
-			'name_admin_bar'        => __('GSAPI', 'text_domain'),
-			'archives'              => __('Item Archives', 'text_domain'),
-			'attributes'            => __('Item Attributes', 'text_domain'),
-			'parent_item_colon'     => __('Parent Item:', 'text_domain'),
-			'all_items'             => __('All Items', 'text_domain'),
-			'add_new_item'          => __('Add New Item', 'text_domain'),
-			'add_new'               => __('Add New', 'text_domain'),
-			'new_item'              => __('New Item', 'text_domain'),
-			'edit_item'             => __('Edit Item', 'text_domain'),
-			'update_item'           => __('Update Item', 'text_domain'),
-			'view_item'             => __('View Item', 'text_domain'),
-			'view_items'            => __('View Items', 'text_domain'),
-			'search_items'          => __('Search Item', 'text_domain'),
-			'not_found'             => __('Not found', 'text_domain'),
-			'not_found_in_trash'    => __('Not found in Trash', 'text_domain'),
-			'featured_image'        => __('Featured Image', 'text_domain'),
-			'set_featured_image'    => __('Set featured image', 'text_domain'),
-			'remove_featured_image' => __('Remove featured image', 'text_domain'),
-			'use_featured_image'    => __('Use as featured image', 'text_domain'),
-			'insert_into_item'      => __('Insert into item', 'text_domain'),
-			'uploaded_to_this_item' => __('Uploaded to this item', 'text_domain'),
-			'items_list'            => __('Items list', 'text_domain'),
-			'items_list_navigation' => __('Items list navigation', 'text_domain'),
-			'filter_items_list'     => __('Filter items list', 'text_domain'),
+			'name'                  => _x('Business Listings', 'Post Type General Name', 'gsapi'),
+			'singular_name'         => _x('Business Listing', 'Post Type Singular Name', 'gsapi'),
+			'menu_name'             => __('GSAPI', 'gsapi'),
+			'name_admin_bar'        => __('GSAPI', 'gsapi'),
+			'archives'              => __('Item Archives', 'gsapi'),
+			'attributes'            => __('Item Attributes', 'gsapi'),
+			'parent_item_colon'     => __('Parent Item:', 'gsapi'),
+			'all_items'             => __('All Items', 'gsapi'),
+			'add_new_item'          => __('Add New Item', 'gsapi'),
+			'add_new'               => __('Add New', 'gsapi'),
+			'new_item'              => __('New Item', 'gsapi'),
+			'edit_item'             => __('Edit Item', 'gsapi'),
+			'update_item'           => __('Update Item', 'gsapi'),
+			'view_item'             => __('View Item', 'gsapi'),
+			'view_items'            => __('View Items', 'gsapi'),
+			'search_items'          => __('Search Item', 'gsapi'),
+			'not_found'             => __('Not found', 'gsapi'),
+			'not_found_in_trash'    => __('Not found in Trash', 'gsapi'),
+			'featured_image'        => __('Featured Image', 'gsapi'),
+			'set_featured_image'    => __('Set featured image', 'gsapi'),
+			'remove_featured_image' => __('Remove featured image', 'gsapi'),
+			'use_featured_image'    => __('Use as featured image', 'gsapi'),
+			'insert_into_item'      => __('Insert into item', 'gsapi'),
+			'uploaded_to_this_item' => __('Uploaded to this item', 'gsapi'),
+			'items_list'            => __('Items list', 'gsapi'),
+			'items_list_navigation' => __('Items list navigation', 'gsapi'),
+			'filter_items_list'     => __('Filter items list', 'gsapi'),
 		);
 		$args = array(
-			'label'                 => __('Business Listing', 'text_domain'),
-			'description'           => __('GSAPI Business Listings', 'text_domain'),
+			'label'                 => __('Business Listing', 'gsapi'),
+			'description'           => __('GSAPI Business Listings', 'gsapi'),
 			'labels'                => $labels,
-			'supports'              => array(),
+			'supports'              => array('title'),
 			'taxonomies'            => array(),
 			'hierarchical'          => false,
 			'public'                => true,
@@ -630,6 +638,60 @@ class GSAPI_Connector
 			'menu_icon'             => 'dashicons-location-alt',
 		);
 		register_post_type('gsplace', $args);
+
+		/*
+		$labels = array(
+			'name'                  => _x('GSAPI Category', 'Post Type General Name', 'gsapi'),
+			'singular_name'         => _x('GSAPI Category', 'Post Type Singular Name', 'gsapi'),
+			'menu_name'             => __('GSAPI Categories', 'gsapi'),
+			'name_admin_bar'        => __('GSAPI Categories', 'gsapi'),
+			'archives'              => __('Item Archives', 'gsapi'),
+			'attributes'            => __('Item Attributes', 'gsapi'),
+			'parent_item_colon'     => __('Parent Item:', 'gsapi'),
+			'all_items'             => __('All Items', 'gsapi'),
+			'add_new_item'          => __('Add New Item', 'gsapi'),
+			'add_new'               => __('Add New', 'gsapi'),
+			'new_item'              => __('New Item', 'gsapi'),
+			'edit_item'             => __('Edit Item', 'gsapi'),
+			'update_item'           => __('Update Item', 'gsapi'),
+			'view_item'             => __('View Item', 'gsapi'),
+			'view_items'            => __('View Items', 'gsapi'),
+			'search_items'          => __('Search Item', 'gsapi'),
+			'not_found'             => __('Not found', 'gsapi'),
+			'not_found_in_trash'    => __('Not found in Trash', 'gsapi'),
+			'featured_image'        => __('Featured Image', 'gsapi'),
+			'set_featured_image'    => __('Set featured image', 'gsapi'),
+			'remove_featured_image' => __('Remove featured image', 'gsapi'),
+			'use_featured_image'    => __('Use as featured image', 'gsapi'),
+			'insert_into_item'      => __('Insert into item', 'gsapi'),
+			'uploaded_to_this_item' => __('Uploaded to this item', 'gsapi'),
+			'items_list'            => __('Items list', 'gsapi'),
+			'items_list_navigation' => __('Items list navigation', 'gsapi'),
+			'filter_items_list'     => __('Filter items list', 'gsapi'),
+		);
+		$args = array(
+			'label'                 => __('Categories', 'gsapi'),
+			'description'           => __('GSAPI Categories', 'gsapi'),
+			'labels'                => $labels,
+			'supports'              => array(),
+			'taxonomies'            => array(),
+			'hierarchical'          => true,
+			'public'                => true,
+			'show_ui'               => false,
+			'show_in_menu'          => false,
+			'menu_position'         => 95,
+			'show_in_admin_bar'     => false,
+			'show_in_nav_menus'     => false,
+			'can_export'            => false,
+			'has_archive'           => false,
+			'exclude_from_search'   => true,
+			'publicly_queryable'    => true,
+			'rewrite'				        => array('slug' => 'cat'),
+			'capability_type'       => 'post',
+			'menu_icon'             => 'dashicons-location-alt',
+		);
+		register_post_type('gscat', $args);
+		*/
 		$this->create_taxonomies();
 		flush_rewrite_rules();
 	}
@@ -659,26 +721,26 @@ class GSAPI_Connector
 	function create_taxonomies()
 	{
 		$labels = array(
-			'name'                       => _x('Locations', 'Taxonomy General Name', 'text_domain'),
-			'singular_name'              => _x('Location', 'Taxonomy Singular Name', 'text_domain'),
-			'menu_name'                  => __('Locations', 'text_domain'),
-			'all_items'                  => __('All Items', 'text_domain'),
-			'parent_item'                => __('Parent Item', 'text_domain'),
-			'parent_item_colon'          => __('Parent Item:', 'text_domain'),
-			'new_item_name'              => __('New Item Name', 'text_domain'),
-			'add_new_item'               => __('Add New Item', 'text_domain'),
-			'edit_item'                  => __('Edit Item', 'text_domain'),
-			'update_item'                => __('Update Item', 'text_domain'),
-			'view_item'                  => __('View Item', 'text_domain'),
-			'separate_items_with_commas' => __('Separate items with commas', 'text_domain'),
-			'add_or_remove_items'        => __('Add or remove items', 'text_domain'),
-			'choose_from_most_used'      => __('Choose from the most used', 'text_domain'),
-			'popular_items'              => __('Popular Items', 'text_domain'),
-			'search_items'               => __('Search Items', 'text_domain'),
-			'not_found'                  => __('Not Found', 'text_domain'),
-			'no_terms'                   => __('No items', 'text_domain'),
-			'items_list'                 => __('Items list', 'text_domain'),
-			'items_list_navigation'      => __('Items list navigation', 'text_domain'),
+			'name'                       => _x('Locations', 'Taxonomy General Name', 'gsapi'),
+			'singular_name'              => _x('Location', 'Taxonomy Singular Name', 'gsapi'),
+			'menu_name'                  => __('Locations', 'gsapi'),
+			'all_items'                  => __('All Items', 'gsapi'),
+			'parent_item'                => __('Parent Item', 'gsapi'),
+			'parent_item_colon'          => __('Parent Item:', 'gsapi'),
+			'new_item_name'              => __('New Item Name', 'gsapi'),
+			'add_new_item'               => __('Add New Item', 'gsapi'),
+			'edit_item'                  => __('Edit Item', 'gsapi'),
+			'update_item'                => __('Update Item', 'gsapi'),
+			'view_item'                  => __('View Item', 'gsapi'),
+			'separate_items_with_commas' => __('Separate items with commas', 'gsapi'),
+			'add_or_remove_items'        => __('Add or remove items', 'gsapi'),
+			'choose_from_most_used'      => __('Choose from the most used', 'gsapi'),
+			'popular_items'              => __('Popular Items', 'gsapi'),
+			'search_items'               => __('Search Items', 'gsapi'),
+			'not_found'                  => __('Not Found', 'gsapi'),
+			'no_terms'                   => __('No items', 'gsapi'),
+			'items_list'                 => __('Items list', 'gsapi'),
+			'items_list_navigation'      => __('Items list navigation', 'gsapi'),
 		);
 		$args = array(
 			'labels'                     => $labels,
@@ -690,39 +752,42 @@ class GSAPI_Connector
 			'show_tagcloud'              => false,
 			'rewrite'                    => array('slug' => 'gslocations'),
 		);
-		register_taxonomy('gslocations', array('gsplace'), $args);
+		register_taxonomy('gslocations', array('gsplace', 'gscat'), $args);
 
 		$labels = array(
-			'name'                       => _x('Categories', 'Taxonomy General Name', 'text_domain'),
-			'singular_name'              => _x('Category', 'Taxonomy Singular Name', 'text_domain'),
-			'menu_name'                  => __('Categories', 'text_domain'),
-			'all_items'                  => __('All Items', 'text_domain'),
-			'parent_item'                => __('Parent Item', 'text_domain'),
-			'parent_item_colon'          => __('Parent Item:', 'text_domain'),
-			'new_item_name'              => __('New Item Name', 'text_domain'),
-			'add_new_item'               => __('Add New Item', 'text_domain'),
-			'edit_item'                  => __('Edit Item', 'text_domain'),
-			'update_item'                => __('Update Item', 'text_domain'),
-			'view_item'                  => __('View Item', 'text_domain'),
-			'separate_items_with_commas' => __('Separate items with commas', 'text_domain'),
-			'add_or_remove_items'        => __('Add or remove items', 'text_domain'),
-			'choose_from_most_used'      => __('Choose from the most used', 'text_domain'),
-			'popular_items'              => __('Popular Items', 'text_domain'),
-			'search_items'               => __('Search Items', 'text_domain'),
-			'not_found'                  => __('Not Found', 'text_domain'),
-			'no_terms'                   => __('No items', 'text_domain'),
-			'items_list'                 => __('Items list', 'text_domain'),
-			'items_list_navigation'      => __('Items list navigation', 'text_domain'),
+			'name'                       => _x('Categories', 'Taxonomy General Name', 'gsapi'),
+			'singular_name'              => _x('Category', 'Taxonomy Singular Name', 'gsapi'),
+			'menu_name'                  => __('Categories', 'gsapi'),
+			'all_items'                  => __('All Items', 'gsapi'),
+			'parent_item'                => __('Parent Item', 'gsapi'),
+			'parent_item_colon'          => __('Parent Item:', 'gsapi'),
+			'new_item_name'              => __('New Item Name', 'gsapi'),
+			'add_new_item'               => __('Add New Item', 'gsapi'),
+			'edit_item'                  => __('Edit Item', 'gsapi'),
+			'update_item'                => __('Update Item', 'gsapi'),
+			'view_item'                  => __('View Item', 'gsapi'),
+			'separate_items_with_commas' => __('Separate items with commas', 'gsapi'),
+			'add_or_remove_items'        => __('Add or remove items', 'gsapi'),
+			'choose_from_most_used'      => __('Choose from the most used', 'gsapi'),
+			'popular_items'              => __('Popular Items', 'gsapi'),
+			'search_items'               => __('Search Items', 'gsapi'),
+			'not_found'                  => __('Not Found', 'gsapi'),
+			'no_terms'                   => __('No items', 'gsapi'),
+			'items_list'                 => __('Items list', 'gsapi'),
+			'items_list_navigation'      => __('Items list navigation', 'gsapi'),
 		);
 		$args = array(
 			'labels'                     => $labels,
 			'hierarchical'               => false,
 			'public'                     => true,
 			'show_ui'                    => false,
-			'show_admin_column'          => true,
-			'show_in_nav_menus'          => true,
-			'show_tagcloud'              => true,
+			'show_admin_column'          => false,
+			'show_in_nav_menus'          => false,
+			'show_tagcloud'              => false,
+			'supports'                   => array('title'),
+			'rewrite'                    => array('slug' => 'gscat'),
 		);
 		register_taxonomy('gscat', array('gsplace'), $args);
+
 	}
 }// GSAPI_Connector();

@@ -25,7 +25,17 @@ if (!defined('WPINC')) {
 	die();
 }
 
-// ------------------------------------------------------------------------
+// ----- -------------------------------------------------------------------
+
+register_activation_hook(__FILE__, 'gsapi_rewrite_flush');
+register_deactivation_hook(__FILE__, 'gsapi_rewrite_flush');
+
+function gsapi_rewrite_flush()
+{
+	flush_rewrite_rules();
+}
+// ----- -------------------------------------------------------------------
+
 
 if (!function_exists('load_view')) :
 
@@ -69,10 +79,10 @@ if (!function_exists('make_slug_id')) :
 	function make_slug_id($string, $id)
 	{
 		$string = strtolower($string);
-		$string = str_replace([" ", ' ', '--'], "-", $string);
-		// 		$string = str_replace(' ', '-', $string); // Replaces all spaces with hyphens.
+		$string = str_replace([" ", ' ', '--', '+'], "-", $string);
+		$string = str_replace(["&"], "-and-", $string);
 		$string = preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
-		// 		$string = str_replace('--', '-', $string); // Replaces all double hyphens with single hyphens.
+		$string = str_replace('--', '-', $string); // Replaces all double hyphens with single hyphens.
 		return $string . '-' . $id;
 	}
 
@@ -85,6 +95,7 @@ if (!function_exists('id_from_slug')) :
 	function id_from_slug($slug)
 	{
 		$parts = explode('-', $slug);
+		return array_pop($parts);
 		$rev = array_reverse($parts);
 		return $rev[0];
 	}
@@ -103,9 +114,7 @@ if (!function_exists('get_stars')) :
 		}
 		if ($rating - floor($rating)  >= 0.50) {
 			$rate .= "<i class=\"fa fa-star-half gold-star\"></i>";
-		}
-
-		if ($rating <= 0.49) {
+		} else if ($rating <= 0.49) {
 			$rate = "<i class=\"fa fa-star-half gold-star\"></i>";
 		}
 
@@ -687,7 +696,7 @@ if (!class_exists('Gamajo_Template_Loader')) :
 		 * @since 1.0.0
 		 * @type string
 		 */
-		protected $theme_template_directory = 'views';
+		protected $theme_template_directory = 'templates';
 
 		/**
 		 * Reference to the root directory path of this plugin.
