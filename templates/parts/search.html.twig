@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% set bodyClass = 'places-search' %}
+
+{% block title %}
+    {% if page_title is defined %}{{ page_title }}{% else %}Grand Strand Online{% endif %}
+{% endblock %}
+
+{% block body %}
+    {{ include('parts/header_search.html.twig') }}
+
+    {{ include('parts/breadcrumb.html.twig') }}
+
+    <div id="places-search" class="container">
+        <div class="row pt-3 pb-4">
+
+            {% if search_term is defined and search_term != '' %}
+                <div id="places-search-results" class="col-12 mb-2">
+                    <h3>Search Results: &ldquo;{{ search_term }}&rdquo;</h3>
+                </div>
+            {% else %}
+                <div id="places-search-results" class="col-12 mb-2">
+                    <h3>Search Results: </h3>
+                </div>
+            {% endif %}
+
+            {% if places == false %}
+                <div id="no-results" class="col-12 mb-2">
+                    <div class="alert alert-danger" role="alert">
+                        Sorry, we could not find any results. 
+                        
+                        {% if places_directory is defined %}Visit the <a href="{{ places_directory }}">Business Directory</a> to browse more.{% endif %}
+                    </div>
+                </div>
+            {% else %}
+                {% if places.cards is defined %}
+                    <div id="places-category-cards" class="col-12">
+
+                        {% if places.repeat == true %}
+                            <div class="row pt-3">
+                                <div class="col-12">
+                                    <i>Note: The radius was expanded for these results to help accommodate this search.</i>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if places.cards|length >= 1 %}
+                            <div class="row py-3">
+                                {% for card in places.cards %}
+                                    <div class="col-6 col-md-4 col-lg-3 py-3">
+                                        {{ include('places/card.html.twig') }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if places_directory is defined %}
+                            <div class="row pt-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info" role="alert">
+                                        Search results are limited to the top related businesses. Refine your searches by viewing the <a href="{{ places_directory }}">Business Directory</a>.
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                {% endif %}
+
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}
+

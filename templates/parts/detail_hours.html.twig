@@ -1,0 +1,56 @@
+<div class="card border-light">
+    <div class="card-header card-header grey lighten-2">
+        <span class="card-title">Hours of Operation</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="detail-hours">
+            <ul class="list-unstyled opening-hours">
+                {% if place.hours_single is defined %}
+                    {% set hours_all = place.hours_single|split(',') %}
+                    {% for hour_each in hours_all %}
+                        {% if hour_each is defined %}
+                            <li>{{ hour_each }}</li>
+                        {% endif %}
+                    {% endfor %}
+                    <li>{{ place.hours_single }}</li>
+                {% else %}
+                    {% if place.hours_sunday is defined %}
+                        <li>Sunday <span class="float-right">{{ place.hours_sunday }}</span></li>
+                    {% else %}
+                        <li>Sunday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_monday is defined %}
+                        <li>Monday <span class="float-right">{{ place.hours_monday }}</span></li>
+                    {% else %}
+                        <li>Monday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_tuesday is defined %}
+                        <li>Tuesday <span class="float-right">{{ place.hours_tuesday }}</span></li>
+                    {% else %}
+                        <li>Tuesday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_wednesday is defined %}
+                        <li>Wednesday <span class="float-right">{{ place.hours_wednesday }}</span></li>
+                    {% else %}
+                        <li>Wednesday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_thursday is defined %}
+                        <li>Thursday <span class="float-right">{{ place.hours_thursday }}</span></li>
+                    {% else %}
+                        <li>Thursday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_friday is defined %}
+                        <li>Friday <span class="float-right">{{ place.hours_friday }}</span></li>
+                    {% else %}
+                        <li>Friday <span class="float-right">--</span></li>
+                    {% endif %}
+                    {% if place.hours_saturday is defined %}
+                        <li>Saturday <span class="float-right">{{ place.hours_saturday }}</span></li>
+                    {% else %}
+                        <li>Saturday <span class="float-right">--</span></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>

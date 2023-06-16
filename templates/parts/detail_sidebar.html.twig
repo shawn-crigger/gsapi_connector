@@ -1,0 +1,24 @@
+<div class="row">
+    {% if places_ad is defined and places_ad is not empty %}
+        {{ include('parts/ad_square.html.twig') }}
+    {% endif %}
+    <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-12 no-gutters">
+        <div class="col-12 gso-detail-side">
+            <a href="https://www.whatsupmyrtle.com/businesses/" target="_blank">
+                <img src="{{ asset('assets/img/sidebar/Claim-Your-Business.jpg') }}" class="border border-light img-fluid mt-0 mt-sm-3 mt-md-3 mt-xl-0 mb-3">
+            </a>
+        </div>
+        <div class="col-12 gso-detail-side">
+            <a href="{{ path('certified') }}">
+                <img src="{{ asset('assets/img/sidebar/Get-Certified-Today.jpg') }}" class="border border-light img-fluid mt-0 mt-sm-3 mt-md-3 mt-xl-0 mb-3">
+            </a>
+        </div>
+    </div>
+    <div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-12 no-gutters">
+        <div class="col-12 gso-detail-side">
+            <a href="https://www.whatsupmyrtle.com/" target="_blank">
+                <img src="{{ asset('assets/img/sidebar/Get-The-App.jpg') }}" class="border border-light img-fluid mt-0 mt-sm-3 mt-md-3 mt-xl-0 mb-3">
+            </a>
+        </div>
+    </div>
+</div>

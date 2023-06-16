@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% set bodyClass = 'places places-detail' %}
+
+{% block title %}
+    {% if page_title is defined %}{{ page_title }}{% else %}Grand Strand Online{% endif %}
+{% endblock %}  
+
+{% block body %}
+    {{ include('parts/header_search.html.twig') }}
+
+    {{ include('parts/breadcrumb.html.twig') }}
+
+    <div id="places-detail" class="container">
+        <div class="row pt-3 pb-4">
+
+            {% if place == false %}
+                <div id="no-results" class="col-12 mb-4">
+                    <div class="alert alert-danger" role="alert">
+                        Sorry, we could not find any results. 
+                        
+                        {% if places_directory is defined %}Visit the <a href="{{ places_directory }}">Business Directory</a> to browse more.{% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 col-xl-9 pr-xl-0 detail-left">
+                    <div class="row pb-3">
+                        <div class="col-12">
+                            {{ include('places/detail_about.html.twig') }}
+                        </div>
+                    </div>
+
+                    {% if place.extra is defined or place.hours is defined %}
+                        <div class="row py-3">
+                            {% if place.extra is defined %}
+                                {% if place.hours is defined %}
+                                    <div class="col-12 col-lg-7 pb-3 pb-lg-0">
+                                {% else %}
+                                    <div class="col-12 pb-3 pb-lg-0">
+                                {% endif %}
+                                    {{ include('places/detail_extra.html.twig') }}
+                                </div>
+                            {% endif %}
+
+                            {% if place.hours is defined %}
+                                {% if place.extra is defined %}
+                                    <div class="col-12 col-lg-5 pt-3 pt-lg-0">
+                                {% else %}
+                                    <div class="col-12 pt-3 pt-lg-0">
+                                {% endif %}
+                                    {{ include('places/detail_hours.html.twig') }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if place.map is defined %}
+                        <div class="row py-3">
+                            <div class="col-12">
+                                {{ include('places/detail_map.html.twig') }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if place.claimed is defined and place.claimed == 0 %}
+                        <div class="row py-3">
+                            <div class="col-12">
+                                <div class="alert alert-info" role="alert">
+                                    Do you own this business? Visit <a href="https://www.whatsupmyrtle.com/businesses/" target="_blank"> Grand Strand API </a> to claim your listing today!
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-12 col-xl-3 detail-right">
+                    {{ include('places/detail_sidebar.html.twig') }}
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('js/details-page', null, 'firstConfig') }}
+    <script>
+    jQuery(document).ready(function() {
+        $(document).on("click", "#toggleFavorite", function() {
+            toggleFavorite = $.ajax({
+                type: "GET",
+                url: "{{ path('app_toggle_favorite') }}",
+                data: {
+                    {% if user.fbuserid is defined %}
+                    'userid' : "{{ user.fbuserid }}",
+                    {% endif %}
+                    'placeid' : "{{ place.id }}",
+                    'placeaddress' : "{{ place.extra_address }}",
+                    'placecity' : "{{ place.extra_city }}",
+                    'placestate' : "{{ place.extra_state }}",
+                    'placezip' : "{{ place.extra_zip }}",
+                    'placeimage' : "{{ place.image_url ~ place.banner_image }}",
+                    'placename' : "{{ place.name }}",
+                },
+                dataType: "text",
+                success: function(msg){
+                    result = msg;
+                    $.each(JSON.parse(result), function(key, arr){
+                        $.each(arr, function(id, value){
+                            if (id == 'isFavorite') {
+                                if (value) {
+                                    $('#toggleFavorite').html('<i id="favHeart" class="fas fa-heart fa-lg"></i>');
+                                } else {
+                                    $('#toggleFavorite').html('<i id="favHeart" class="far fa-heart fa-lg"></i>');
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ encore_entry_link_tags('css/details-page', null, 'firstConfig') }}
+{% endblock %}
+
+{% block head_javascripts %}
+    {{ parent() }}
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=5f65100dddcc360019c41e67&product=inline-share-buttons' async='async'></script>
+{% endblock %}

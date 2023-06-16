@@ -1,0 +1,60 @@
+<div class="card no-gutters rounded-0 border-light">
+    {% if card.logo is defined and card.image_url is defined %}
+        <div class="view overlay">
+            {% if card.url is defined %}
+                <a href="{{ card.url }}">
+            {% endif %}
+                <img src="{{ asset(card.image_url ~ card.logo) }}" class="card-img-top rounded-0" {% if card.name is defined %}alt="{{ card.name }}"{% endif %}>
+            {% if card.url is defined %}
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+    <div class="card-body p-3">
+        {% if card.name is defined %}
+            {% if card.url is defined %}
+                <a href="{{ card.url }}">
+            {% endif %}
+                <h5 class="card-title text-center {% if card.rating_stars is defined %}mb-0{% endif %}">{{ card.name }}</h5>
+            {% if card.url is defined %}
+                </a>
+            {% endif %}
+        {% endif %}
+        {% if card.rating_stars is defined %}
+            <p class="card-text text-center mb-3"><span id="rateMe" class="{{ card.rating_stars }}"></span></p>
+        {% endif %}
+        
+        <ul class="fa-ul mb-0">
+        {% if card.address is defined %}
+            <li class="pb-3">
+                <span class="fa-li pt-1"><i class="fas fa-map fa-pull-left fa-fw"></i></span>
+                {{ card.address }}{% if card.city is defined %},<br/> {{ card.city }}{% endif %}{% if card.state is defined %}, {{ card.state }}{% endif %}{% if card.zip is defined %}<br/>{{ card.zip }}{% endif %}
+            </li>
+        {% endif %}
+        {% if card.distance is defined %}
+            <li class="pb-3">
+                <span class="fa-li pt-1"><i class="fas fa-map-marker fa-pull-left fa-fw"></i> </span>
+                {{ card.distance }} miles {% if places_default is defined and places_default != 'none' %}from {{ places_default }}{% else %}away{% endif %}
+            </li>
+        {% endif %}
+        {% if card.phone is defined %}
+            <li class="pb-3">
+                <span class="fa-li pt-1"><i class="fas fa-phone fa-pull-left fa-fw"></i></span> <a href="tel:{{ card.phone }}">Call {% if card.fphone is defined %}{{ card.fphone }}{% else %}{{ card.phone }}{% endif %}</a>
+            </li>
+        {% endif %}
+        {% if card.website is defined %}
+            <li class="pb-3">
+                <span class="fa-li pt-1"><i class="fas fa-globe fa-pull-left fa-fw"></i></span> <a href="{{ card.website }}" target="_blank">Visit Website</a>
+            </li>
+        {% endif %}
+        {% if card.category_name is defined and card.category_url is defined %}
+            <li class="pb-3">
+                <span class="fa-li pt-1"><i class="fas fa-list fa-pull-left fa-fw"></i></span> <a href="{{ card.category_url }}">{{ card.category_name }}</a>
+            </li>
+        {% endif %}
+        </ul>
+    </div>
+    {% if card.url is defined %}
+        <a href="{{ card.url }}" class="card-link btn btn-default btn-lg btn-block rounded-0 text-white">View Business <i class="text-white fas fa-caret-right fa-1x pl-1"></i> </a>
+    {% endif %}
+</div>

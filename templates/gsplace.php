@@ -6,8 +6,14 @@
  *
  */
 
+echo '<h2>Defined Variables</h2>';
+$v = get_defined_vars();
+var_export($v);
+die;
+
 $debug = TRUE;
 get_header();
+
 
 $data = $GLOBALS['gsapi_connector']->_fetch_detail();
 $data = is_array($data) ? array_shift($data) : $data;
@@ -115,6 +121,7 @@ add_action('after_setup_theme', 'go_away_extra_sidebar');
 							<div class="responsive" style="margin:6px;">
 								<?php foreach ($data->images->images as $image) :
 									$image = preg_replace('/_l./i', '_m.', $image);
+									$image = fixDoubleDottedExtensions($image);
 									echo '<div style="min-height: 250px; max-height: 275px; background: url(https://grandstrandapi.com/photos/' . $image . ') center center; background-size: cover; "></div>';
 								endforeach; ?>
 							</div>

@@ -1,0 +1,85 @@
+<div class="card border-light">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12 col-md-4 col-lg-5 order-last text-md-right">
+                {% if place.extra_directions is defined %}
+                    <p class="card-text m-0">
+                        <a href="{{ place.extra_directions }}" class="btn btn-primary btn-sm m-0 mt-0 mb-2" target="_blank"><i class="fas fa-location-arrow fa-pull-left pr-1"></i> Get Directions </a>
+                    </p>
+                {% endif %}
+                {% if place.claimed is defined and place.claimed >= 1 %}
+                    {% if place.extra_facebook is defined %}
+                        <p class="card-text m-0">
+                            <a href="{{ place.extra_facebook }}" class="btn btn-fb btn-sm mx-0 mt-0 mb-2" {{ follow_link }} target="_blank"><i class="fab fa-facebook-f fa-pull-left pr-1"></i> Facebook</a>
+                        </p>
+                    {% endif %}
+                    {% if place.extra_twitter is defined %}
+                        <p class="card-text m-0">
+                            <a href="{{ place.extra_twitter }}" class="btn btn-tw btn-sm mx-0 mt-0 mb-2" {{ follow_link }} target="_blank"><i class="fab fa-twitter fa-pull-left pr-1"></i> Twitter</a>
+                        </p>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col-12 col-md-8 col-lg-7 order-first">
+                <ul class="fa-ul mb-0">
+                    {% if place.extra_address is defined %}
+                        <li class="pb-3">
+                            <span class="fa-li pt-1"><i class="fas fa-map fa-pull-left fa-fw"></i></span> {{ place.extra_address }}{% if place.extra_city is defined %},<br/> {{ place.extra_city }}{% endif %}{% if place.extra_state is defined %}, {{ place.extra_state }}{% endif %}{% if place.extra_zip is defined %}<br/>{{ place.extra_zip }}{% endif %}
+                        </li>
+                    {% endif %}
+                    {% if place.distance is defined %}
+                        <li class="pb-3">
+                            <span class="fa-li pt-1"><i class="fas fa-map-marker fa-pull-left fa-fw"></i></span> 
+                            {{ place.distance }} miles {% if places_default is defined and places_default != 'none' %}from {{ places_default }}{% else %}away{% endif %}
+                        </li>
+                    {% endif %}
+                    {% if place.extra_phone is defined %}
+                        <li class="pb-3"><span class="fa-li pt-1"><i class="fas fa-phone fa-pull-left fa-fw"></i></span> <a href="tel:{{ place.extra_phone }}">Call {% if place.name is defined %}{{ place.name }}{% else %}Business{% endif %}</a></li>
+                    {% endif %}
+                    {% if place.extra_website is defined %}
+                        <li class="pb-3"><span class="fa-li pt-1"><i class="fas fa-globe fa-pull-left fa-fw"></i></span> <a href="{{ place.extra_website }}" {{ follow_link }} target="_blank">Visit {% if place.name is defined %}{{ place.name }}{% else %}Business{% endif %} Website</a></li>
+                    {% endif %}
+                    {% if place.claimed is defined and place.claimed >= 1 %}
+                        {% if place.extra_menu_web is defined and device_type == 'desktop' %}
+                            <li class="pb-3"><span class="fa-li pt-1"><i class="fas fa-utensils fa-pull-left fa-fw"></i></span> <a href="{{ place.extra_menu_web }}" {{ follow_link }} target="_blank">View {% if place.name is defined %}{{ place.name }}{% else %}Business{% endif %} Menu</a></li>
+                        {% endif %}
+                        {% if place.extra_menu_mobile is defined and device_type != 'desktop' %}
+                            <li class="pb-3"><span class="fa-li pt-1"><i class="fas fa-utensils fa-pull-left fa-fw"></i></span> <a href="{{ place.extra_menu_mobile }}" {{ follow_link }} target="_blank">View {% if place.name is defined %}{{ place.name }}{% else %}Business{% endif %} Menu</a></li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% if place.claimed is defined and place.claimed >= 1 %}
+            {% if place.images is defined %}
+                <div class="row mt-3">
+                    {% if place.images|length > 3 %}
+                        <div id="carousel-example-multi" class="carousel slide carousel-multi-item v-2 m-0" data-ride="carousel">
+                            <div class="carousel-inner v-2" role="listbox">
+                    {% endif %}
+                        {% for image in place.images %}
+                            {% if place.images|length > 3 %}
+                                {% if loop.index == 1 %}
+                                    <div class="carousel-item active">
+                                {% else %}
+                                    <div class="carousel-item">
+                                {% endif %}
+                            {% endif %}
+                                <div class="col-4 text-center">
+                                    <a data-remote="{{ asset( place.image_url ~ image ) }}" data-toggle="lightbox" data-gallery="gallery" data-type="image" data-max-width="800">
+                                        <img src="{{ asset( place.image_url ~ image ) }}" class="img-fluid rounded mr-1" style="vertical-align: bottom;">
+                                    </a>
+                                </div>
+                            {% if place.images|length > 3 %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% if place.images|length > 3 %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

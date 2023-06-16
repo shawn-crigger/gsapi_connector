@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% set bodyClass = 'places places-category' %}
+
+{% block title %}
+    {% if page_title is defined %}{{ page_title }}{% else %}Resources for the Myrtle Beach area - Grand Strand Online{% endif %}
+    
+{% endblock %}
+
+{% block body %}
+    {{ include('parts/header_search.html.twig') }}
+
+    {{ include('parts/breadcrumb.html.twig') }}
+
+    <div id="places-category" class="container">
+        <div class="row pt-3 pb-4">
+
+            {% if places == false %}
+                <div id="no-results" class="col-12">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <h3>Places</h3>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <div class="alert alert-danger" role="alert">
+                                Sorry, we could not find any results. 
+                                
+                                {% if places_directory is defined %}Please visit the <a href="{{ places_directory }}">Business Directory</a> to begin your search.{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+
+                {% if places.badges is defined and places.badges != '' %}
+                    <div id="places-category-refine" class="col-12">
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <h4 style="font-size: 1.5rem;">Refine Results</h4>
+                            </div>
+                        </div>
+                        <div class="row text-center mb-4">
+                            <div class="col-12">
+                                {% for badge in places.badges %}
+                                    {% if loop.index == 17 %}
+                                        </div>
+                                        <div class="col-12 collapse" id="collapseBadges">
+                                    {% endif %}
+                                    {% if badge.name is defined and badge.url is defined %}
+                                        <span class="badge badge-primary p-2 mx-1 mb-2 z-depth-0"><a href="{{ badge.url }}" title="Find {{ badge.name }} Near Me" class="text-white">{{ badge.name }}</a></span>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if places.badges|length > 16  %}
+                                    </div>
+                                    <div class="col-12 pt-1 mt-2">
+                                    <a id="view-more" class="text-secondary" data-toggle="collapse" href="#collapseBadges" role="button" aria-expanded="false" aria-controls="collapseBadges"><i class="fas fa-caret-down"></i> View <span>More</span> <i class="fas fa-caret-down"></i></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if places.cards is defined %}
+                    <div id="places-category-cards" class="col-12 mb-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <h3 class="float-left">Places</h3>
+                            
+                                {% if places_sort_pop is defined and places_sort_dis is defined %}
+                                    <p class="h5 float-right">Sort By: <a href="{{ places_sort_pop }}" class="text-secondary">Popularity</a> | <a href="{{ places_sort_dis }}" class="text-secondary">Distance</a></p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if places.cards|length >= 1 %}
+                            <div class="row">
+                                {% for card in places.cards %}
+                                    {% if places_ad is defined and places_ad is not empty %}
+                                        {% if loop.index == 5 %}
+                                            {{ include('parts/ad_banner.html.twig') }}
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    {% if loop.index >= 5 %}
+                                        <div class="col-6 col-md-4 col-lg-3 py-3 order-last">
+                                    {% elseif loop.index == 4 %}
+                                        <div class="col-6 col-md-4 col-lg-3 py-3 order-{{ loop.index }} order-md-{{ (loop.index + 2) }} order-lg-{{ loop.index }}">
+                                    {% else %}
+                                        <div class="col-6 col-md-4 col-lg-3 py-3 order-{{ loop.index }}">
+                                    {% endif %}
+                                        {{ include('places/card.html.twig') }}
+                                    </div>
+                                {% endfor %}
+                                
+                                {% if places_ad is defined and places_ad is not empty %}
+                                    {% if places.cards|length <= 4 %}
+                                        {{ include('parts/ad_banner.html.twig') }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {{ include('parts/pagination.html.twig') }}
+
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}

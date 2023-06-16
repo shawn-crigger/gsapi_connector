@@ -1,0 +1,115 @@
+
+<div class="card border-light">
+    {% if place.claimed is defined and place.claimed >= 1 %}
+        {% if place.banner_image is defined %}
+            <div class="row m-0">
+                <img src="{{ asset( place.image_url ~ place.banner_image ) }}" style="height: 250px;width: 100%;object-fit: cover;object-position: 50% 50%;" class="img-fluid rounded-0" style="vertical-align: bottom;">
+            </div>
+        {% endif %}
+    {% endif %}
+    <div class="card-body">
+        <div class="row">
+            {% if place.claimed is defined and place.claimed >= 1 and place.logo is defined %}
+                <div class="col-12 col-md-8 order-2 order-md-1">
+            {% else %}
+                <div class="col-12 order-2 order-md-1">
+                    <div class="float-right">
+                        <div class="addthis_inline_share_toolbox"></div>
+                    </div>
+            {% endif %}
+                {% if place.name is defined %}
+                    <span class="card-title h3">{{ place.name }}</span>
+                {% endif %}
+                {% if user is not null %}
+                    <span>
+                    {% if isfavorite == false %}
+                        <a id="toggleFavorite" class="m-0 mt-0 mb-2" style="color:red;" title="Favorite"><i id="favHeart" class="far fa-heart fa-lg"></i></a><br/>
+                    {% else %}
+                        <a id="toggleFavorite" class="m-0 mt-0 mb-2" style="color:red;" title="Favorite"><i id="favHeart" class="fas fa-heart fa-lg"></i></a><br/>
+                    {% endif %}
+                    </span>
+                {% endif %}
+                {% if place.claimed is defined and place.claimed >= 1 %}
+                    {% if place.tagline is defined %}
+                        <p class="h6 pb-1"><em>&ldquo; {{ place.tagline }} &rdquo;</em> 
+                        {% if place.rating_stars is defined %}
+                            <span id="rateMe" class="pl-3 {{ place.rating_stars }}"></span>
+                        {% endif %}</p>
+                    {% endif %}
+                {% else %}
+                    {% if place.rating_stars is defined %}
+                        <span id="rateMe" class="{{ place.rating_stars }}"></span>
+                    {% endif %}
+                {% endif %}
+                {% if place.description is defined %}
+                    <p class="card-text">{{ place.description|raw }}</p>
+                {% endif %}
+            </div>
+            {% if place.claimed is defined and place.claimed >= 1 %}
+                {% if place.logo is defined and place.image_url is defined %}
+                    <div class="col-12 col-md-4 order-1 order-md-2">
+                        <div class="float-right">
+                            <img src="{{ asset( place.image_url ~ place.logo ) }}" class="card-img-top mx-auto img-fluid rounded" alt="{{ place.name }}">
+                        </div>
+                        <div class="float-right pt-3">
+                            <div class="sharethis-inline-share-buttons"></div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+            <div class="col-12 order-12 pt-3">
+                {% if place.categories is defined %}
+                    <div class="col-12 col-md-6 float-left p-0 mb-2">
+                        <p class="card-text">
+                            <span class="pr-2 font-weight-bold"> Categories :</span>
+                            {% for category in place.categories %}
+                                {% if category.url is defined %}
+                                    <a href="{{ category.url }}" 
+                                    {% if category.primary is defined and category.primary == true %}
+                                    class="text-secondary pr-1"
+                                    {% else %}
+                                    class="text-primary pr-1"
+                                    {% endif %}>
+                                {% endif %}
+                                <i class="fas fa-list"></i> {{ category.name }}
+                                {% if category.url is defined %}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                {% elseif place.category_name is defined %}
+                    <div class="col-12 col-md-6 float-md-left p-0 mb-2">
+                        <p class="card-text">
+                            <span class="pr-2 font-weight-bold"> Categories :</span>
+                            {% if place.category_url is defined %}
+                                <a href="{{ place.category_url }}" class="text-primary">
+                            {% endif %}
+                            <i class="fas fa-list"></i> {{ place.category_name }}
+                            {% if place.category_url is defined %}
+                                </a>
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+                {% if place.tags is defined %}
+                    <div class="col-12 col-md-6 float-md-right text-md-right p-0">
+                        {% for tag in place.tags %}
+                            {% if tag.label is defined %}
+                                <span class="badge badge-primary p-2 mr-1">
+                                    {% if tag.url is defined %}
+                                        <a href="{{ tag.url }}" class="text-white">
+                                    {% endif %}
+                                    {{ tag.label }}
+                                    {% if tag.url is defined %}
+                                        </a>
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
